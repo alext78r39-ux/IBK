@@ -28,8 +28,12 @@ import androidx.compose.ui.window.Dialog
 import com.masteryi.core.model.iching.DivinationResult
 import com.masteryi.core.model.iching.Hexagram
 import com.masteryi.core.model.iching.TiYongAnalysis
+import com.masteryi.core.model.iching.Trigram
+import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.core.model.iching.Yao
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
+import com.masteryi.yibokgua.ui.components.TrigramPairSection
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -97,6 +101,7 @@ fun DivinationInputScreen(
                 DivinationResultCard(
                     result = result,
                     tiYongAnalysis = uiState.tiYongAnalysis,
+                    getTrigramInfo = viewModel::getTrigramInfo,
                     onNavigateToDetail = onNavigateToDetail,
                     onReset = viewModel::resetShake
                 )
@@ -640,9 +645,12 @@ fun CategoryDirectionView(onCalculate: (Int, Int) -> Unit) {
 fun DivinationResultCard(
     result: DivinationResult,
     tiYongAnalysis: TiYongAnalysis?,
+    getTrigramInfo: (Trigram) -> TrigramInfo,
     onNavigateToDetail: (Int) -> Unit,
     onReset: () -> Unit
 ) {
+    var dialogInfo by remember { mutableStateOf<TrigramInfo?>(null) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -718,6 +726,30 @@ fun DivinationResultCard(
                 )
             }
 
+            // 上下卦八卦資料區塊（本卦；點擊小卡可看單卦詳情）
+            Spacer(modifier = Modifier.height(12.dp))
+            TrigramPairSection(
+                title = "本卦・上下卦資料",
+                lower = getTrigramInfo(result.originalHexagram.lowerTrigram),
+                upper = getTrigramInfo(result.originalHexagram.upperTrigram),
+                onTrigramClick = { dialogInfo = it }
+            )
+
+            // 上下卦八卦資料區塊（變卦）
+            result.mutatedHexagram?.let { mutated ->
+                if (mutated.lowerTrigram != result.originalHexagram.lowerTrigram ||
+                    mutated.upperTrigram != result.originalHexagram.upperTrigram
+                ) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TrigramPairSection(
+                        title = "變卦・上下卦資料",
+                        lower = getTrigramInfo(mutated.lowerTrigram),
+                        upper = getTrigramInfo(mutated.upperTrigram),
+                        onTrigramClick = { dialogInfo = it }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             TiYongAnalysisSection(tiYongAnalysis = tiYongAnalysis)
@@ -739,6 +771,11 @@ fun DivinationResultCard(
                 }
             }
         }
+    }
+
+    // 單卦詳情彈窗（點擊上下卦小卡時顯示）
+    dialogInfo?.let { info ->
+        TrigramInfoDialog(info = info, onDismiss = { dialogInfo = null })
     }
 }
 

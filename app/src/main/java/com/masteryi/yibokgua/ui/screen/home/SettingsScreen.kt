@@ -23,9 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.masteryi.yibokgua.settings.ColorPreset
 import com.masteryi.yibokgua.settings.SettingsViewModel
 import com.masteryi.yibokgua.settings.ThemeMode
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import kotlin.math.roundToInt
 
 @Composable
 fun SettingsScreen(settingsViewModel: SettingsViewModel) {
@@ -65,6 +67,57 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel) {
                     }
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                // 配色方案
+                SettingSectionTitle("配色方案", "選擇應用主色調")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ColorPreset.entries.forEach { preset ->
+                        FilterChip(
+                            selected = settings.colorPreset == preset,
+                            onClick = { settingsViewModel.setColorPreset(preset) },
+                            label = { Text(preset.label, style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                // 字級大小
+                SliderSettingRow(
+                    title = "字級大小",
+                    subtitle = "調整全局文字大小",
+                    value = settings.fontSizeScale,
+                    valueRange = 0.8f..1.4f,
+                    steps = 5,
+                    valueLabel = { "${(it * 100).roundToInt()}%" },
+                    onValueChange = settingsViewModel::setFontSizeScale
+                )
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                // 邊框粗細
+                SliderSettingRow(
+                    title = "邊框粗細",
+                    subtitle = "調整卡片與分隔線邊框",
+                    value = settings.borderWidth,
+                    valueRange = 0f..2f,
+                    steps = 7,
+                    valueLabel = { "${String.format("%.1f", it)}dp" },
+                    onValueChange = settingsViewModel::setBorderWidth
+                )
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
+                // 鍵盤大小
+                SliderSettingRow(
+                    title = "鍵盤大小",
+                    subtitle = "調整起卦頁按鈕尺寸",
+                    value = settings.keyboardScale,
+                    valueRange = 0.8f..1.4f,
+                    steps = 5,
+                    valueLabel = { "${(it * 100).roundToInt()}%" },
+                    onValueChange = settingsViewModel::setKeyboardScale
+                )
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
                 SwitchRow(
                     title = "動態取色",
                     subtitle = "使用 Android 12+ 系統色彩（需重新啟動後生效）",
@@ -231,6 +284,47 @@ private fun SwitchRow(
             )
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+private fun SliderSettingRow(
+    title: String,
+    subtitle: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    steps: Int = 0,
+    valueLabel: (Float) -> String,
+    onValueChange: (Float) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = valueLabel(value),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            steps = steps,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

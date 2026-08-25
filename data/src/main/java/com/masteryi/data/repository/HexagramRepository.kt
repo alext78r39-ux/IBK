@@ -9,7 +9,35 @@ class HexagramRepository {
     // 上下卦定義：下卦 = 內卦、地卦；上卦 = 外卦、天卦。
     // 先天八卦數：乾 1、兌 2、離 3、震 4、巽 5、坎 6、艮 7、坤 8
     // 八卦五行：乾、兌屬金；震、巽屬木；坎屬水；離屬火；艮、坤屬土
-    private val hexagramDatabase: List<Hexagram> = listOf(
+    private val hexagramDatabase: List<Hexagram> = buildEnrichedDatabase()
+
+    private companion object {
+        /** 建構 64 卦並補全錯卦、綜卦、互卦、六爻變卦 */
+        private fun buildEnrichedDatabase(): List<Hexagram> {
+            val raw = buildRawDatabase()
+            val byBinary = raw.associateBy { it.binaryCode }
+            return raw.map { h ->
+                val cuo = h.binaryCode.map { if (it == '1') '0' else '1' }.joinToString("")
+                val zong = h.binaryCode.reversed()
+                val huLower = h.binaryCode.substring(1, 4) // 爻 2~4
+                val huUpper = h.binaryCode.substring(2, 5) // 爻 3~5
+                val hu = "$huUpper$huLower"
+                val bian = (0..5).mapNotNull { i ->
+                    val chars = h.binaryCode.toCharArray()
+                    chars[i] = if (chars[i] == '1') '0' else '1'
+                    byBinary[chars.joinToString("")]
+                }
+                h.copy(
+                    cuoHexagram = byBinary[cuo],
+                    zongHexagram = byBinary[zong],
+                    huHexagram = byBinary[hu],
+                    bianHexagrams = bian
+                )
+            }
+        }
+
+        /** 原始 64 卦資料（未含關聯卦） */
+        private fun buildRawDatabase(): List<Hexagram> = listOf(
         // ============================ 上經三十卦 ============================
         Hexagram(
             id = 1, name = "乾為天", binaryCode = "111111",
@@ -1553,6 +1581,7 @@ class HexagramRepository {
             interpretation = "未濟為事未成、循環未終，六十四卦收束於未濟，代表世事永無絕對圓滿，萬物循環往復。小狐快渡河卻尾巴沾水，急躁差最後一步。謹慎辨別方位、守正穩行可成事；沉溺享樂、不知節度則功虧一簣。全卦陰陽皆失位，但剛柔相應，只要持守正道，困局終可打通。"
         )
     )
+    }
 
     fun getHexagramByBinary(binary: String): Hexagram {
         return hexagramDatabase.find { it.binaryCode == binary }

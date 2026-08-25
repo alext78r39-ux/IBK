@@ -97,7 +97,12 @@ data class Hexagram(
     val tuanZhuan: String = "",           // 彖傳（釋卦總義）
     val yaoXiangZhuan: List<String> = emptyList(), // 分爻小象傳
     val commentary: String = "",           // 歷代注解
-    val interpretation: String = ""        // 淺釋（白話解說）
+    val interpretation: String = "",       // 淺釋（白話解說）
+    // ---- 關聯卦（由 HexagramRepository.enrichAll() 補全） ----
+    val cuoHexagram: Hexagram? = null,     // 錯卦：每爻陰陽互換
+    val zongHexagram: Hexagram? = null,    // 綜卦：六爻上下顛倒
+    val huHexagram: Hexagram? = null,      // 互卦：取 2~4 爻為下卦、3~5 爻為上卦
+    val bianHexagrams: List<Hexagram> = emptyList() // 六爻變卦：逐一變換每爻
 ) {
     /**
      * 完整的六爻卦象（Unicode 易經六十四卦符號，一字符即全卦），依文王卦序排列。

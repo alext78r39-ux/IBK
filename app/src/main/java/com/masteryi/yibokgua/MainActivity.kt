@@ -26,6 +26,8 @@ import com.masteryi.yibokgua.ui.screen.home.HistoryScreen
 import com.masteryi.yibokgua.ui.screen.home.SettingsScreen
 import com.masteryi.yibokgua.ui.screen.input.DivinationInputScreen
 import com.masteryi.yibokgua.ui.screen.query.HexagramQueryScreen
+import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
+import com.masteryi.yibokagua.ui.theme.LocalKeyboardScale
 import com.masteryi.yibokgua.ui.theme.YibokguaTheme
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 
@@ -39,9 +41,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val settings by settingsViewModel.settings.collectAsStateWithLifecycle()
+            CompositionLocalProvider(
+                LocalBorderWidth provides settings.borderWidth,
+                LocalKeyboardScale provides settings.keyboardScale
+            ) {
             YibokguaTheme(
                 themeMode = settings.themeMode,
-                dynamicColor = settings.dynamicColor
+                dynamicColor = settings.dynamicColor,
+                fontSizeScale = settings.fontSizeScale,
+                colorPreset = settings.colorPreset
             ) {
                 var currentTab by remember { mutableIntStateOf(0) }
                 var pendingDetailId by remember { mutableStateOf<Int?>(null) }
@@ -110,6 +118,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
             }
         }
     }

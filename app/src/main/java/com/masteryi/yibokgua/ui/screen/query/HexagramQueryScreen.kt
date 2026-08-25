@@ -2,6 +2,7 @@ package com.masteryi.yibokgua.ui.screen.query
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -15,17 +16,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.masteryi.core.model.iching.Hexagram
 import com.masteryi.core.model.iching.TiYongInfo
+import com.masteryi.core.model.iching.Trigram
+import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
+import com.masteryi.yibokgua.ui.components.TrigramPairSection
+import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 
-/** 全局統一細框線樣式（隨主題自適應） */
+/** 全局統一細框線樣式（隨主題與設定自適應） */
 private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+    @Composable get() = BorderStroke(LocalBorderWidth.current.dp, MaterialTheme.colorScheme.outline)
 
 @Composable
 fun HexagramQueryScreen(
@@ -125,16 +132,24 @@ fun HexagramQueryScreen(
     }
 
     selectedHexagram?.let { hexagram ->
-        HexagramDetailDialog(hexagram = hexagram, onDismiss = { selectedHexagram = null })
+        HexagramDetailDialog(
+            hexagram = hexagram,
+            getTrigramInfo = viewModel::getTrigramInfo,
+            onDismiss = { selectedHexagram = null },
+            onHexagramClick = { selectedHexagram = it }
+        )
     }
 }
 
-/** 卦象詳情彈窗：完整六爻卦象、梅花易數屬性、卦辭、彖傳、大象傳、六爻爻辭、分爻小象傳、歷代注解 */
+/** 卦象詳情彈窗：完整六爻卦象、錯卦綜卦互卦變卦、梅花易數屬性、上下卦八卦資料、卦辭、彖傳、大象傳、六爻爻辭、分爻小象傳、歷代注解 */
 @Composable
 fun HexagramDetailDialog(
     hexagram: Hexagram,
-    onDismiss: () -> Unit
+    getTrigramInfo: (Trigram) -> TrigramInfo,
+    onDismiss: () -> Unit,
+    onHexagramClick: (Hexagram) -> Unit = {}
 ) {
+    var dialogInfo by remember { mutableStateOf<TrigramInfo?>(null) }
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
@@ -177,23 +192,44 @@ fun HexagramDetailDialog(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    // 錯卦、綜卦、互卦（橫向滾動卡片）
+                    RelatedHexagramSection(
+                        title = "錯卦・綜卦・互卦",
+                        items = listOfNotNull(
+                            hexagram.cuoHexagram?.let { "錯卦" to it },
+                            hexagram.zongHexagram?.let { "綜卦" to it },
+                            hexagram.huHexagram?.let { "互卦" to it }
                         ),
-                        border = ThinBorder,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("【梅花易數屬性】", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Text(hexagram.meiHuaAttribute)
-                            Text(
-                                text = "下卦：${hexagram.lowerTrigram.nameZh}（內卦/地卦）・上卦：${hexagram.upperTrigram.nameZh}（外卦/天卦）",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                        onHexagramClick = { onDismiss(); onHexagramClick(it) }
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 六爻變卦（橫向滾動卡片）
+                    if (hexagram.bianHexagrams.isNotEmpty()) {
+                        RelatedHexagramSection(
+                            title = "六爻變卦",
+                            items = hexagram.bianHexagrams.mapIndexed { i, h -> "第${i + 1}爻變" to h },
+                            onHexagramClick = { onDismiss(); onHexagramClick(it) }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
+
+                    Text(
+                        text = hexagram.meiHuaAttribute,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 上下卦八卦資料區塊（點擊小卡可看單卦詳情）
+                    TrigramPairSection(
+                        title = "上下卦・八卦資料",
+                        lower = getTrigramInfo(hexagram.lowerTrigram),
+                        upper = getTrigramInfo(hexagram.upperTrigram),
+                        onTrigramClick = { dialogInfo = it }
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Card(
@@ -267,6 +303,11 @@ fun HexagramDetailDialog(
             }
         }
     }
+
+    // 單卦詳情彈窗（點擊上下卦小卡時顯示）
+    dialogInfo?.let { info ->
+        TrigramInfoDialog(info = info, onDismiss = { dialogInfo = null })
+    }
 }
 
 /** 體用生克情境行 */
@@ -277,6 +318,77 @@ private fun TiYongScenarioRow(title: String, info: TiYongInfo) {
         style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.padding(vertical = 2.dp)
     )
+}
+
+/** 關聯卦橫向滾動區塊 */
+@Composable
+private fun RelatedHexagramSection(
+    title: String,
+    items: List<Pair<String, Hexagram>>,
+    onHexagramClick: (Hexagram) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(title)
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items.forEach { (label, hex) ->
+                RelatedHexagramCard(label = label, hexagram = hex, onClick = { onHexagramClick(hex) })
+            }
+        }
+    }
+}
+
+/** 單張關聯卦卡片：卦象符號 + 卦名 + 卦序，點擊跳轉 */
+@Composable
+private fun RelatedHexagramCard(
+    label: String,
+    hexagram: Hexagram,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(100.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = ThinBorder,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = hexagram.symbol,
+                fontSize = 28.sp,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = hexagram.name,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "第${hexagram.id}卦",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
 /** 詳情彈窗小節標題（高對比主題色） */

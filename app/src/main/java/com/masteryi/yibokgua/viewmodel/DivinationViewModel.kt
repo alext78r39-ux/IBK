@@ -7,8 +7,11 @@ import com.masteryi.core.model.iching.EightPalaceGroup
 import com.masteryi.core.model.iching.DivinationResult
 import com.masteryi.core.model.iching.Hexagram
 import com.masteryi.core.model.iching.TiYongAnalysis
+import com.masteryi.core.model.iching.Trigram
+import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.core.model.iching.Yao
 import com.masteryi.data.repository.HexagramRepository
+import com.masteryi.data.repository.TrigramInfoRepository
 import com.masteryi.engine.iching.DivinationEngine
 import com.masteryi.engine.iching.TiYongAnalyzer
 import kotlinx.coroutines.Job
@@ -31,6 +34,7 @@ data class DivinationUiState(
 class DivinationViewModel : ViewModel() {
 
     private val repository = HexagramRepository()
+    private val trigramInfoRepository = TrigramInfoRepository()
     private val engine = DivinationEngine(findHexagramByBinary = repository::getHexagramByBinary)
     private val tiYongAnalyzer = TiYongAnalyzer(findHexagramByBinary = repository::getHexagramByBinary)
 
@@ -125,4 +129,8 @@ class DivinationViewModel : ViewModel() {
 
     private val eightPalacesData: List<EightPalaceGroup> by lazy { EightPalaceBuilder.build(repository.getAllHexagrams()) }
     fun getEightPalaces(): List<EightPalaceGroup> = eightPalacesData
+
+    // 八卦資料
+    fun getTrigramInfo(trigram: Trigram): TrigramInfo = trigramInfoRepository.getTrigramInfo(trigram)
+    fun getAllTrigramInfos(): List<TrigramInfo> = trigramInfoRepository.getAll()
 }

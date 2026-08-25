@@ -16,16 +16,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import com.masteryi.core.model.iching.LunarDate
 import com.masteryi.core.model.iching.Trigram
+import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
 import java.time.LocalDate
 
 private val ThinBorder: BorderStroke
@@ -38,10 +43,8 @@ private data class HomeSpace(
     val quotePadding: Dp,
     val taijiSize: Dp,
     val sectionSpacing: Dp,
-    val trigramSpacing: Dp,
     val palaceSymbolSize: Int,
-    val palaceNameSize: Int,
-    val palacePaddingV: Dp
+    val palaceNameSize: Int
 )
 
 @Composable
@@ -53,10 +56,8 @@ private fun HomeScreenSpace(maxHeight: Dp): HomeSpace {
         quotePadding = if (compact) 8.dp else 14.dp,
         taijiSize = if (compact) 84.dp else 110.dp,
         sectionSpacing = if (compact) 4.dp else 8.dp,
-        trigramSpacing = if (compact) 5.dp else 8.dp,
         palaceSymbolSize = if (compact) 17 else 20,
-        palaceNameSize = if (compact) 10 else 12,
-        palacePaddingV = if (compact) 5.dp else 8.dp
+        palaceNameSize = if (compact) 10 else 12
     )
 }
 
@@ -65,7 +66,8 @@ fun HomeScreen(
     viewModel: DivinationViewModel,
     onStartManualDivination: () -> Unit
 ) {
-    var selectedTrigram by remember { mutableStateOf(Trigram.QIAN) }
+    var selectedTrigram by remember { mutableStateOf<Trigram?>(null) }
+    var dialogInfo by remember { mutableStateOf<TrigramInfo?>(null) }
     val lunarToday = remember { LunarDate.of(LocalDate.now()) }
 
     AdaptiveScreen {
@@ -86,15 +88,15 @@ fun HomeScreen(
                 DivinationQuote(space = space)
 
                 Spacer(Modifier.height(space.sectionSpacing))
-                TaijiAction(space = space, onClick = onStartManualDivination)
 
-                Spacer(Modifier.height(space.sectionSpacing))
-                SectionTitle("八卦", compact = space.compact)
-
-                // 八卦橫排：佔滿剩餘空間並垂直置中
-                PalaceSelector(
+                // 先天八卦環陣：太極居中為起卦入口，八卦依方位環繞，點擊彈出該卦資料視窗
+                BaguaWheel(
                     selected = selectedTrigram,
-                    onSelect = { selectedTrigram = it },
+                    onSelect = { trigram ->
+                        selectedTrigram = trigram
+                        dialogInfo = viewModel.getTrigramInfo(trigram)
+                    },
+                    onTaijiClick = onStartManualDivination,
                     space = space,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -103,6 +105,11 @@ fun HomeScreen(
                 Spacer(Modifier.height(4.dp))
             }
         }
+    }
+
+    // 八卦資料彈窗
+    dialogInfo?.let { info ->
+        TrigramInfoDialog(info = info, onDismiss = { dialogInfo = null })
     }
 }
 
@@ -219,46 +226,73 @@ private fun TaijiArtwork(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun SectionTitle(text: String, compact: Boolean) {
-    Text(
-        text,
-        style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-    )
-}
+/** 先天八卦方位單位向量（y 向下為正）：乾上坤下、離左坎右、兌左上、巽右上、震左下、艮右下 */
+private val BAGUA_DIRECTIONS: List<Pair<Trigram, Pair<Float, Float>>> = listOf(
+    Trigram.QIAN to (0.00f to -1.00f),
+    Trigram.DUI to (-0.71f to -0.71f),
+    Trigram.XUN to (0.71f to -0.71f),
+    Trigram.LI to (-1.00f to 0.00f),
+    Trigram.KAN to (1.00f to 0.00f),
+    Trigram.ZHEN to (-0.71f to 0.71f),
+    Trigram.GEN to (0.71f to 0.71f),
+    Trigram.KUN to (0.00f to 1.00f)
+)
 
-/** 八卦橫排：八卦全部單行排列，依剩餘空間等比分配寬度 */
+/** 八卦環陣：太極圖居中作為手動起卦按鈕，八卦卡片依先天方位以圓形軌道環繞 */
 @Composable
-private fun PalaceSelector(
-    selected: Trigram,
+private fun BaguaWheel(
+    selected: Trigram?,
     onSelect: (Trigram) -> Unit,
+    onTaijiClick: () -> Unit,
     space: HomeSpace,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    val cardWidth = if (space.compact) 46.dp else 54.dp
+    val cardHeight = if (space.compact) 62.dp else 74.dp
+
+    BoxWithConstraints(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(space.trigramSpacing),
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        Trigram.entries.forEach { trigram ->
-            PalaceButton(
+        // 圓形軌道半徑：取寬高較小者，扣除卡片尺寸與邊距，避免四周卡片被裁切或貼邊
+        val radius = (
+            min(
+                maxWidth / 2 - cardWidth / 2,
+                maxHeight / 2 - cardHeight / 2
+            ) - 6.dp
+            ).coerceAtLeast(0.dp)
+        val ringColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+
+        // 虛線圓形軌道：串聯八方，襯托環繞布局
+        Canvas(modifier = Modifier.size(radius * 2)) {
+            drawCircle(
+                color = ringColor,
+                style = Stroke(
+                    width = 0.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))
+                )
+            )
+        }
+
+        TaijiAction(space = space, onClick = onTaijiClick)
+
+        BAGUA_DIRECTIONS.forEach { (trigram, dir) ->
+            BaguaCard(
                 trigram = trigram,
                 selected = trigram == selected,
                 onClick = { onSelect(trigram) },
                 space = space,
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
+                    .align(Alignment.Center)
+                    .absoluteOffset(x = radius * dir.first, y = radius * dir.second)
+                    .size(width = cardWidth, height = cardHeight)
             )
         }
     }
 }
 
 @Composable
-private fun PalaceButton(
+private fun BaguaCard(
     trigram: Trigram,
     selected: Boolean,
     onClick: () -> Unit,
@@ -275,21 +309,11 @@ private fun PalaceButton(
         border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else ThinBorder,
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 2.dp else 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = space.palacePaddingV),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
             Text(trigram.symbol, fontSize = space.palaceSymbolSize.sp)
-            Spacer(Modifier.height(if (space.compact) 1.dp else 3.dp))
-            Text(
-                trigram.nameZh,
-                fontSize = space.palaceNameSize.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
-            )
         }
     }
 }
