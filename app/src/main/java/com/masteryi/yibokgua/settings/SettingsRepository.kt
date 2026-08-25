@@ -15,12 +15,12 @@ enum class ThemeMode(val storeValue: Int) {
     DARK(2)
 }
 
-enum class ColorPreset(val label: String) {
-    DEFAULT("朱砂金"),
-    BLUE("青瓷藍"),
-    GREEN("翡翠綠"),
-    PURPLE("紫水晶"),
-    ORANGE("琥珀橘")
+enum class ColorPreset(val label: String, val storeValue: Int) {
+    DEFAULT("朱砂金", 0),
+    BLUE("青瓷藍", 1),
+    GREEN("翡翠綠", 2),
+    PURPLE("紫水晶", 3),
+    ORANGE("琥珀橘", 4)
 }
 
 private val Context.settingsDataStore by preferencesDataStore(name = "yibokgua_settings")
