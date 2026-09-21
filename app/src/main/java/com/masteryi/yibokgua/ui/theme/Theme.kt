@@ -185,7 +185,7 @@ fun YibokguaTheme(
 }
 
 /** 依倍率縮放所有字級 */
-private fun scaledTypography(scale: Float) = Typography(
+private fun scaledTypography(scale: Float) = androidx.compose.material3.Typography(
     displayLarge = Typography.displayLarge.copy(fontSize = Typography.displayLarge.fontSize * scale),
     displayMedium = Typography.displayMedium.copy(fontSize = Typography.displayMedium.fontSize * scale),
     displaySmall = Typography.displaySmall.copy(fontSize = Typography.displaySmall.fontSize * scale),

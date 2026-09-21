@@ -27,7 +27,7 @@ import com.masteryi.yibokgua.ui.screen.home.SettingsScreen
 import com.masteryi.yibokgua.ui.screen.input.DivinationInputScreen
 import com.masteryi.yibokgua.ui.screen.query.HexagramQueryScreen
 import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
-import com.masteryi.yibokagua.ui.theme.LocalKeyboardScale
+import com.masteryi.yibokgua.ui.theme.LocalKeyboardScale
 import com.masteryi.yibokgua.ui.theme.YibokguaTheme
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
                                     currentTab = 2
                                 },
                                 onStartManualDivination = {
-                                    pendingDivinationTab = 1
+                                    pendingDivinationTab = 0
                                     currentTab = 1
                                 },
                                 onAutoOpenConsumed = { pendingDetailId = null },
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity() {
                                 currentTab = 2
                             },
                             onStartManualDivination = {
-                                pendingDivinationTab = 1
+                                pendingDivinationTab = 0
                                 currentTab = 1
                             },
                             onAutoOpenConsumed = { pendingDetailId = null },

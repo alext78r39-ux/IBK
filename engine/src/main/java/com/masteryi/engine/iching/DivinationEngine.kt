@@ -4,7 +4,12 @@ import com.masteryi.core.model.iching.DivinationResult
 import com.masteryi.core.model.iching.Hexagram
 import com.masteryi.core.model.iching.Trigram
 import com.masteryi.core.model.iching.Yao
+import java.lang.Character.UnicodeScript
 import kotlin.random.Random
+
+/** 統計字串中包含的中文字（漢字）字數 */
+fun countChineseCharacters(text: String): Int =
+    text.codePoints().filter { UnicodeScript.of(it) == UnicodeScript.HAN }.count().toInt()
 
 class DivinationEngine(
     private val findHexagramByBinary: (String) -> Hexagram
@@ -52,10 +57,10 @@ class DivinationEngine(
     }
 
     /**
-     * 2. 自動搖卦（單爻機率引擎）
+     * 2. 搖一爻（三錢法機率引擎）
      * 機率：老陰 12%、老陽 13%、少陽 37%、少陰 38%
      */
-    fun rollSingleYaoAuto(random: Random = Random.Default): Yao {
+    fun rollSingleYao(random: Random = Random.Default): Yao {
         val rand = random.nextInt(100) // 0 .. 99
         return when {
             rand < 12 -> Yao.OLD_YIN        // 0..11 (12%)
@@ -103,7 +108,7 @@ class DivinationEngine(
     }
 
     /**
-     * 4. 根據手動/搖卦完成的 6 爻解析卦象
+     * 4. 根據手動/快速搖卦完成的 6 爻解析卦象
      */
     fun buildResultFrom6Yaos(yaos: List<Yao>, typeName: String = "搖卦起卦"): DivinationResult {
         require(yaos.size == 6) { "六爻必須剛好包含 6 個爻" }
@@ -120,6 +125,16 @@ class DivinationEngine(
             movingYaoIndex = yaos.indexOfFirst { it.isMoving }.takeIf { it != -1 }?.plus(1),
             divinationType = typeName
         )
+    }
+
+    /**
+     * 5. 字占起卦（用戶輸入 1-10 個中文字成卦）
+     * TODO: 補充字占起卦邏輯（以字數 / 筆畫取數推卦），目前先以隨機六爻作為框架預留。
+     */
+    fun calculateCharacterDivination(text: String, random: Random = Random.Default): DivinationResult {
+        require(countChineseCharacters(text) in 1..10) { "字占限 1-10 個中文字" }
+        val yaos = List(6) { rollSingleYao(random) }
+        return buildResultFrom6Yaos(yaos, "字占起卦")
     }
 
     private fun mod8(n: Int): Int = valRem(n, 8)

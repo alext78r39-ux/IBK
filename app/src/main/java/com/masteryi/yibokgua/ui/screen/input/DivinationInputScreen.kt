@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -35,6 +36,7 @@ import com.masteryi.yibokgua.ui.components.AdaptiveScreen
 import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
 import com.masteryi.yibokgua.ui.components.TrigramPairSection
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
+import com.masteryi.engine.iching.countChineseCharacters
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -57,7 +59,7 @@ fun DivinationInputScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("自動", "手動", "日期", "類象")
+    val tabs = listOf("手動", "快速", "日期", "類象", "字占")
 
     LaunchedEffect(requestedTabIndex) {
         if (requestedTabIndex != null && requestedTabIndex in tabs.indices) {
@@ -89,10 +91,11 @@ fun DivinationInputScreen(
                 .padding(16.dp)
         ) {
             when (selectedTabIndex) {
-                0 -> AutoShakeView(viewModel = viewModel)
-                1 -> ManualShakeView(viewModel = viewModel)
+                0 -> ManualShakeView(viewModel = viewModel)
+                1 -> QuickShakeView(viewModel = viewModel)
                 2 -> TimeDivinationView(onCalculate = viewModel::performTimeDivination)
                 3 -> CategoryDirectionView(onCalculate = viewModel::performCategoryDirectionDivination)
+                4 -> CharacterDivinationView(onCalculate = viewModel::performCharacterDivination)
             }
         }
 
@@ -110,17 +113,18 @@ fun DivinationInputScreen(
     }
 }
 
-/** 自動搖卦 - 太極圖長按元件（依可用空間自適應尺寸，空間不足時自動改為捲動佈局） */
+/** 手動搖卦 - 太極圖長按元件（依可用空間自適應尺寸，空間不足時自動改為捲動佈局） */
 @Composable
-fun AutoShakeView(viewModel: DivinationViewModel) {
+fun ManualShakeView(viewModel: DivinationViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     var started by remember { mutableStateOf(false) }
 
     if (!started) {
         ShakeStartPrompt(
-            title = "自動搖卦",
-            description = "點擊「開始」後，長按太極圖 2 秒生成一爻，依序搖滿六爻成卦。",
+            title = "手動搖卦",
+            description = "點擊「開始」後，長按太極圖 2 秒生成一爻，依序搖滿六爻成卦。中途放開可重新計時。",
             showTaiji = true,
+            extraMessage = uiState.question,
             onStart = { started = true }
         )
         return
@@ -139,6 +143,7 @@ fun AutoShakeView(viewModel: DivinationViewModel) {
             hint = hint,
             progress = progressAnimated,
             taijiSize = taijiSize,
+            question = uiState.question,
             onPressStart = viewModel::startTaijiLongPress,
             onPressRelease = viewModel::cancelTaijiLongPress,
             onReset = {
@@ -156,11 +161,16 @@ private fun AutoShakeLayout(
     hint: String,
     progress: Float,
     taijiSize: Dp,
+    question: String? = null,
     onPressStart: () -> Unit,
     onPressRelease: () -> Unit,
     onReset: () -> Unit
 ) {
     val content: @Composable ColumnScope.() -> Unit = {
+        if (!question.isNullOrBlank()) {
+            QuestionBanner(question)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
         YaoDisplayBoard(yaos = yaos, modifier = Modifier.fillMaxWidth())
         Text(
             text = hint,
@@ -258,6 +268,7 @@ private fun ShakeStartPrompt(
     title: String,
     description: String,
     showTaiji: Boolean = false,
+    extraMessage: String? = null,
     onStart: () -> Unit
 ) {
     Column(
@@ -283,6 +294,10 @@ private fun ShakeStartPrompt(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+        if (!extraMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            QuestionBanner(extraMessage, modifier = Modifier.fillMaxWidth())
+        }
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = onStart,
@@ -292,6 +307,27 @@ private fun ShakeStartPrompt(
         ) {
             Text("開始", style = MaterialTheme.typography.titleMedium)
         }
+    }
+}
+
+/** 所占之事提示卡 */
+@Composable
+private fun QuestionBanner(text: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = ThinBorder,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Text(
+            text = "所占之事：$text",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 12.dp)
+        )
     }
 }
 
@@ -505,111 +541,100 @@ fun TimeDivinationView(onCalculate: (Int, Int, Int, Int, Int) -> Unit) {
     }
 }
 
-/** 手動搖卦介面（依可用空間自適應，空間不足時自動改為捲動佈局） */
+/** 快速起卦介面：一鍵直接生成六個爻 */
 @Composable
-fun ManualShakeView(viewModel: DivinationViewModel) {
+fun QuickShakeView(viewModel: DivinationViewModel) {
     val uiState by viewModel.uiState.collectAsState()
     var started by remember { mutableStateOf(false) }
 
     if (!started) {
         ShakeStartPrompt(
-            title = "手動搖卦",
-            description = "點擊「開始」後，依序點選爻類型（6 老陰・7 少陽・8 少陰・9 老陽），搖滿六爻成卦。",
-            onStart = { started = true }
+            title = "快速起卦",
+            description = "點擊「開始」後，直接生成所有六個爻，一鍵成卦。",
+            onStart = {
+                started = true
+                viewModel.performQuickDivination()
+            }
         )
         return
     }
 
-    // 數字 爻象名 爻線圖示 變爻標記
-    val manualOptions = listOf(
-        Yao.OLD_YIN to "╍ ◯",       // 6 老陰
-        Yao.YOUNG_YANG to "━",        // 7 少陽
-        Yao.YOUNG_YIN to "╍",         // 8 少陰
-        Yao.OLD_YANG to "━ ✕"         // 9 老陽
-    )
-
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val isCompact = maxHeight < 560.dp
-
-        val content: @Composable ColumnScope.() -> Unit = {
-            YaoDisplayBoard(yaos = uiState.currentYaos, modifier = Modifier.fillMaxWidth())
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "點擊下方選擇爻類型（由初爻依次指定至上爻）：",
-                    style = MaterialTheme.typography.titleSmall
-                )
-
-                manualOptions.forEach { (yao, glyph) ->
-                    val isMoving = yao.isMoving
-                    Button(
-                        onClick = { viewModel.addManualYao(yao) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isMoving) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary,
-                            contentColor = if (isMoving) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${yao.code} ${yao.label}",
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (isMoving) {
-                                    Text(
-                                        text = "變爻 ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                                Text(
-                                    text = glyph,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    viewModel.resetShake()
-                    started = false
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("重置")
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "本次生成的六爻如下：",
+            style = MaterialTheme.typography.titleSmall
+        )
+        YaoDisplayBoard(yaos = uiState.currentYaos, modifier = Modifier.fillMaxWidth())
+        Button(
+            onClick = viewModel::performQuickDivination,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("重新起卦")
         }
+        Button(
+            onClick = {
+                viewModel.resetShake()
+                started = false
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("重置")
+        }
+    }
+}
 
-        if (isCompact) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                content = content
+/** 字占起卦介面：輸入 1-10 個中文字，送出後成卦 */
+@Composable
+fun CharacterDivinationView(onCalculate: (String) -> Boolean) {
+    var input by rememberSaveable { mutableStateOf("") }
+    var showError by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("字占起卦：", style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = "輸入 1-10 個中文字，依其字數與筆畫取數成卦。",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        OutlinedTextField(
+            value = input,
+            onValueChange = {
+                input = it
+                showError = false
+            },
+            placeholder = { Text("請輸入所占之字") },
+            supportingText = {
+                Text("${countChineseCharacters(input)} / 10 字")
+            },
+            isError = showError,
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (showError) {
+            Text(
+                text = "請輸入 1-10 個中文字",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
             )
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                content = content
-            )
+        }
+        Button(
+            onClick = {
+                showError = !onCalculate(input)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("字占起卦")
         }
     }
 }
@@ -670,6 +695,22 @@ fun DivinationResultCard(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
+            result.question.takeIf { it.isNotBlank() }?.let { question ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "所占之事：$question",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            result.divinationText.takeIf { it.isNotBlank() }?.let { text ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "占字：$text",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             Text("點擊卦名可跳轉 64 卦庫查看對應詳情", style = MaterialTheme.typography.bodySmall)

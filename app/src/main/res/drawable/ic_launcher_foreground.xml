@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  太極（黑白雙魚）應用程式圖示前景。
+  圓心 (54,54)，外圓半徑 22，內半圓半徑 11（安全區 33~75）。
+  S 曲線由兩條「大弧 + 內半圓」魚形構成，黑白魚眼各一。
+  前景層置中；背景層（朱砂紅）在 mipmap 中獨立提供。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 黑魚（左半，尾在左、頭在右下） -->
+    <path
+        android:fillColor="#FF111111"
+        android:pathData="M 54,32
+            A 11,11 0 0,0 54,54
+            A 11,11 0 0,1 54,76
+            A 22,22 0 0,1 32,54
+            A 22,22 0 0,1 54,32
+            Z"/>
+
+    <!-- 白魚（右半，尾在右、頭在左上） -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 54,32
+            A 22,22 0 0,1 76,54
+            A 22,22 0 0,1 54,76
+            A 11,11 0 0,0 54,54
+            A 11,11 0 0,1 54,32
+            Z"/>
+
+    <!-- 白魚眼（黑魚頭內，圓心 54,65 半徑 2.2） -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 54,62.8
+            A 2.2,2.2 0 1,0 54,67.2
+            A 2.2,2.2 0 1,0 54,62.8
+            Z"/>
+
+    <!-- 黑魚眼（白魚頭內，圓心 54,43 半徑 2.2） -->
+    <path
+        android:fillColor="#FF111111"
+        android:pathData="M 54,40.8
+            A 2.2,2.2 0 1,0 54,45.2
+            A 2.2,2.2 0 1,0 54,40.8
+            Z"/>
+
+</vector>

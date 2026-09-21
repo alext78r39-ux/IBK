@@ -29,10 +29,10 @@ class DivinationEngineTest {
     }
 
     @Test
-    fun testRollSingleYaoAutoProbabilityDistribution() {
+    fun testRollSingleYaoProbabilityDistribution() {
         val random = Random(42)
         val counts = mutableMapOf<Yao, Int>()
-        repeat(100_000) { counts.merge(engine.rollSingleYaoAuto(random), 1, Int::plus) }
+        repeat(100_000) { counts.merge(engine.rollSingleYao(random), 1, Int::plus) }
         val tolerance = 0.01
         assertEquals(0.12, counts[Yao.OLD_YIN]!! / 100_000.0, tolerance)
         assertEquals(0.13, counts[Yao.OLD_YANG]!! / 100_000.0, tolerance)

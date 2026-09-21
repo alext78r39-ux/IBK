@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -89,6 +90,15 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(space.sectionSpacing))
 
+                // 所占之事輸入框：輸入後按「確定」跳轉手動起卦
+                QuestionInputBar(
+                    viewModel = viewModel,
+                    onConfirm = onStartManualDivination,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(space.sectionSpacing))
+
                 // 先天八卦環陣：太極居中為起卦入口，八卦依方位環繞，點擊彈出該卦資料視窗
                 BaguaWheel(
                     selected = selectedTrigram,
@@ -110,6 +120,52 @@ fun HomeScreen(
     // 八卦資料彈窗
     dialogInfo?.let { info ->
         TrigramInfoDialog(info = info, onDismiss = { dialogInfo = null })
+    }
+}
+
+@Composable
+private fun QuestionInputBar(
+    viewModel: DivinationViewModel,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var questionInput by rememberSaveable { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.question) {
+        if (uiState.question.isNotEmpty()) questionInput = uiState.question
+    }
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        border = ThinBorder,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = questionInput,
+                onValueChange = { questionInput = it },
+                placeholder = { Text("輸入所占之事") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            Button(
+                onClick = {
+                    if (questionInput.isNotBlank()) viewModel.setQuestion(questionInput)
+                    onConfirm()
+                }
+            ) {
+                Text("確定")
+            }
+        }
     }
 }
 
@@ -205,7 +261,7 @@ private fun TaijiAction(space: HomeSpace, onClick: () -> Unit) {
         }
         Spacer(Modifier.height(if (space.compact) 2.dp else 4.dp))
         Text(
-            "手動起卦",
+            "起卦",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold

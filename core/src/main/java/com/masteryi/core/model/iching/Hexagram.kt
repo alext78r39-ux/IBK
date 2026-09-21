@@ -148,5 +148,7 @@ data class DivinationResult(
     val yaos: List<Yao>,           // 長度 6，[0] 為初爻，[5] 為上爻
     val movingYaoIndex: Int?,      // 動爻位置 (1~6)，若為梅花易數則必定有 1 動爻
     val divinationType: String,
+    val question: String = "",     // 所占之事（首頁輸入，載入歷史紀錄）
+    val divinationText: String = "", // 字占輸入之文字（1-10 個中文字）
     val timestamp: Long = System.currentTimeMillis()
 )

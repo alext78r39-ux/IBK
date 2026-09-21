@@ -3,6 +3,7 @@ package com.masteryi.yibokgua.ui.screen.home
 import android.content.pm.PackageManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -68,15 +69,26 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel) {
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
+                SwitchRow(
+                    title = "動態取色",
+                    subtitle = "使用 Android 12+ 系統色彩",
+                    checked = settings.dynamicColor,
+                    onCheckedChange = settingsViewModel::setDynamicColor
+                )
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+
                 // 配色方案
                 SettingSectionTitle("配色方案", "選擇應用主色調")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     ColorPreset.entries.forEach { preset ->
                         FilterChip(
                             selected = settings.colorPreset == preset,
                             onClick = { settingsViewModel.setColorPreset(preset) },
-                            label = { Text(preset.label, style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.weight(1f)
+                            label = { Text(preset.label, style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                 }
@@ -115,14 +127,6 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel) {
                     steps = 5,
                     valueLabel = { "${(it * 100).roundToInt()}%" },
                     onValueChange = settingsViewModel::setKeyboardScale
-                )
-                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-
-                SwitchRow(
-                    title = "動態取色",
-                    subtitle = "使用 Android 12+ 系統色彩（需重新啟動後生效）",
-                    checked = settings.dynamicColor,
-                    onCheckedChange = settingsViewModel::setDynamicColor
                 )
             }
         }
@@ -441,7 +445,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    "提供時間起卦、自動搖卦、手動搖卦與類象加方位起卦，",
+                    "提供手動搖卦、快速起卦、時間起卦、類象加方位起卦與字占起卦，",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -466,15 +470,17 @@ private fun AboutDialog(onDismiss: () -> Unit) {
 
 private val USAGE_TEXT = """
 【起卦】
-底部或側欄「起卦」頁提供四種起卦方式：
+底部或側欄「起卦」頁提供五種起卦方式：
 
-・自動搖卦：點「開始」後，長按太極圖 2 秒生成一爻，依序搖滿六爻成卦。中途放開可重新計時。
+・手動搖卦：點「開始」後，長按太極圖 2 秒生成一爻，依序搖滿六爻成卦。中途放開可重新計時。
 
-・手動搖卦：點「開始」後，依序點選爻類型（6 老陰、7 少陽、8 少陰、9 老陽），六爻齊即成卦。帶「變爻」標記者為動爻。
+・快速起卦：點「開始」後，直接生成六個爻，一鍵成卦。
 
 ・日期（梅花易數）：選擇日期與時間（24 小時制），按下「梅花起卦」即以年月日時取數成卦。
 
 ・類象：輸入「物象／觀察數」與「方位數」，按下「生成卦象」取數起卦。
+
+・字占：輸入 1-10 個中文字，確認送出後依字取數成卦。
 
 【卦象解讀】
 成卦後顯示本卦與變卦、動爻位置，以及「體用生克」分析（體為自身、用為所應之事）。

@@ -17,17 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.masteryi.core.model.iching.Hexagram
-import com.masteryi.core.model.iching.TiYongInfo
 import com.masteryi.core.model.iching.Trigram
 import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
 import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
 import com.masteryi.yibokgua.ui.components.TrigramPairSection
 import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
+import com.masteryi.yibokgua.ui.theme.YibokguaTheme
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 
 /** 全局統一細框線樣式（隨主題與設定自適應） */
@@ -191,8 +192,46 @@ fun HexagramDetailDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(12.dp))
+					
+                    SectionHeader("周易本經・卦辭")
+                    Text(hexagram.judgement)
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // 錯卦、綜卦、互卦（橫向滾動卡片）
+                    SectionHeader("彖傳（釋卦總義）")
+                    Text(hexagram.tuanZhuan.ifEmpty { "資料建置中..." })
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SectionHeader("大象傳（全卦總象）")
+                    Text(hexagram.imageText)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    SectionHeader("周易本經・六爻爻辭")
+                    hexagram.lineTexts.forEach { line ->
+                        Text(line, modifier = Modifier.padding(vertical = 2.dp))
+                    }
+
+                    if (hexagram.yaoXiangZhuan.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SectionHeader("分爻小象傳")
+                        hexagram.yaoXiangZhuan.forEach { line ->
+                            Text(line, modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+
+                    if (hexagram.interpretation.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SectionHeader("淺釋（白話解說）")
+                        Text(hexagram.interpretation)
+                    }
+
+                    if (hexagram.commentary.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SectionHeader("歷代注解")
+                        Text(hexagram.commentary)
+                    }
+					Spacer(modifier = Modifier.height(10.dp))
+					
+					// 錯卦、綜卦、互卦（橫向滾動卡片）
                     RelatedHexagramSection(
                         title = "錯卦・綜卦・互卦",
                         items = listOfNotNull(
@@ -231,65 +270,6 @@ fun HexagramDetailDialog(
                         onTrigramClick = { dialogInfo = it }
                     )
                     Spacer(modifier = Modifier.height(10.dp))
-
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        border = ThinBorder,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("【體用生克】", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            Text(
-                                text = "體為自身、用為所應之事：動爻所在之卦為用，無動爻之卦為體；無動爻時內卦下卦為體、外卦上卦為用。",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            TiYongScenarioRow(title = "無動爻（默認）", info = hexagram.tiYong())
-                            TiYongScenarioRow(title = "動爻在下卦（初・二・三爻）", info = hexagram.tiYong(1))
-                            TiYongScenarioRow(title = "動爻在上卦（四・五・六爻）", info = hexagram.tiYong(4))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    SectionHeader("周易本經・卦辭")
-                    Text(hexagram.judgement)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SectionHeader("彖傳（釋卦總義）")
-                    Text(hexagram.tuanZhuan.ifEmpty { "資料建置中..." })
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SectionHeader("大象傳（全卦總象）")
-                    Text(hexagram.imageText)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    SectionHeader("周易本經・六爻爻辭")
-                    hexagram.lineTexts.forEach { line ->
-                        Text(line, modifier = Modifier.padding(vertical = 2.dp))
-                    }
-
-                    if (hexagram.yaoXiangZhuan.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        SectionHeader("分爻小象傳")
-                        hexagram.yaoXiangZhuan.forEach { line ->
-                            Text(line, modifier = Modifier.padding(vertical = 2.dp))
-                        }
-                    }
-
-                    if (hexagram.interpretation.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        SectionHeader("淺釋（白話解說）")
-                        Text(hexagram.interpretation)
-                    }
-
-                    if (hexagram.commentary.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        SectionHeader("歷代注解")
-                        Text(hexagram.commentary)
-                    }
                 }
 
                 // 固定底部的關閉按鈕
@@ -308,16 +288,6 @@ fun HexagramDetailDialog(
     dialogInfo?.let { info ->
         TrigramInfoDialog(info = info, onDismiss = { dialogInfo = null })
     }
-}
-
-/** 體用生克情境行 */
-@Composable
-private fun TiYongScenarioRow(title: String, info: TiYongInfo) {
-    Text(
-        text = "$title：${info.text}",
-        style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(vertical = 2.dp)
-    )
 }
 
 /** 關聯卦橫向滾動區塊 */
@@ -399,4 +369,13 @@ private fun SectionHeader(text: String) {
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary
     )
+}
+
+/** 64 卦庫全螢幕預覽 */
+@Preview(showBackground = true, showSystemUi = true, widthDp = 411, heightDp = 891)
+@Composable
+private fun HexagramQueryScreenPreview() {
+    YibokguaTheme {
+        HexagramQueryScreen(viewModel = DivinationViewModel())
+    }
 }
