@@ -3,11 +3,9 @@ package com.masteryi.yibokgua.ui.screen.input
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -35,6 +33,8 @@ import com.masteryi.core.model.iching.Yao
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
 import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
 import com.masteryi.yibokgua.ui.components.TrigramPairSection
+import com.masteryi.yibokgua.ui.components.ZenCard
+import com.masteryi.yibokgua.ui.components.zenThinBorder
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 import com.masteryi.engine.iching.countChineseCharacters
 import java.time.Instant
@@ -45,7 +45,7 @@ import java.time.format.DateTimeFormatter
 
 /** 全局統一細框線樣式（隨主題自適應） */
 private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+    @Composable get() = zenThinBorder()
 
 /** 日期顯示格式 */
 private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年M月d日")
@@ -313,12 +313,7 @@ private fun ShakeStartPrompt(
 /** 所占之事提示卡 */
 @Composable
 private fun QuestionBanner(text: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    ZenCard(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "所占之事：$text",
             style = MaterialTheme.typography.titleSmall,
@@ -334,12 +329,7 @@ private fun QuestionBanner(text: String, modifier: Modifier = Modifier) {
 /** 繪製 6 爻看板 (由下至上：初爻為底部，第 0 項繪製於最下方) */
 @Composable
 fun YaoDisplayBoard(yaos: List<Yao>, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    ZenCard(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -405,11 +395,9 @@ fun TimeDivinationView(onCalculate: (Int, Int, Int, Int, Int) -> Unit) {
         Text("請選擇日期與時間（梅花易數）：", style = MaterialTheme.typography.titleSmall)
 
         // 日期選擇欄位
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true },
-            border = ThinBorder
+        ZenCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { showDatePicker = true }
         ) {
             Row(
                 modifier = Modifier
@@ -439,11 +427,9 @@ fun TimeDivinationView(onCalculate: (Int, Int, Int, Int, Int) -> Unit) {
         }
 
         // 時間選擇欄位（24 小時制）
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showTimePicker = true },
-            border = ThinBorder
+        ZenCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { showTimePicker = true }
         ) {
             Row(
                 modifier = Modifier
@@ -512,7 +498,7 @@ fun TimeDivinationView(onCalculate: (Int, Int, Int, Int, Int) -> Unit) {
         )
         Dialog(onDismissRequest = { showTimePicker = false }) {
             Surface(
-                shape = RoundedCornerShape(24.dp),
+                shape = MaterialTheme.shapes.extraLarge,
                 color = MaterialTheme.colorScheme.surface,
                 border = ThinBorder,
                 modifier = Modifier.width(328.dp)
@@ -676,13 +662,11 @@ fun DivinationResultCard(
 ) {
     var dialogInfo by remember { mutableStateOf<TrigramInfo?>(null) }
 
-    Card(
+    ZenCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -824,14 +808,7 @@ fun DivinationResultCard(
 @Composable
 private fun TiYongAnalysisSection(tiYongAnalysis: TiYongAnalysis?) {
     if (tiYongAnalysis == null) return
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    ZenCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = "【體用生克】",
@@ -862,14 +839,11 @@ private fun ResultHexagramColumn(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ZenCard(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

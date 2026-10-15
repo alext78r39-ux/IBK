@@ -14,7 +14,6 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -26,6 +25,10 @@ import com.masteryi.yibokgua.ui.screen.home.HistoryScreen
 import com.masteryi.yibokgua.ui.screen.home.SettingsScreen
 import com.masteryi.yibokgua.ui.screen.input.DivinationInputScreen
 import com.masteryi.yibokgua.ui.screen.query.HexagramQueryScreen
+import com.masteryi.yibokgua.ui.screen.reader.ReaderScreen
+import com.masteryi.yibokgua.ui.screen.reader.ReaderViewModel
+import com.masteryi.yibokgua.ui.components.BookIcon
+import com.masteryi.yibokgua.ui.components.ZenPageTransition
 import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
 import com.masteryi.yibokgua.ui.theme.LocalKeyboardScale
 import com.masteryi.yibokgua.ui.theme.YibokguaTheme
@@ -35,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: DivinationViewModel by viewModels()
     private val settingsViewModel: SettingsViewModel by viewModels()
+    private val readerViewModel: ReaderViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +75,7 @@ class MainActivity : ComponentActivity() {
                                 currentTab = currentTab,
                                 viewModel = viewModel,
                                 settingsViewModel = settingsViewModel,
+                                readerViewModel = readerViewModel,
                                 pendingDetailId = pendingDetailId,
                                 pendingDivinationTab = pendingDivinationTab,
                                 onNavigateToDetail = { hexagramId ->
@@ -79,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onStartManualDivination = {
                                     pendingDivinationTab = 0
-                                    currentTab = 1
+                                    currentTab = 5
                                 },
                                 onAutoOpenConsumed = { pendingDetailId = null },
                                 onRequestedTabConsumed = { pendingDivinationTab = null },
@@ -102,6 +107,7 @@ class MainActivity : ComponentActivity() {
                             currentTab = currentTab,
                             viewModel = viewModel,
                             settingsViewModel = settingsViewModel,
+                            readerViewModel = readerViewModel,
                             pendingDetailId = pendingDetailId,
                             pendingDivinationTab = pendingDivinationTab,
                             onNavigateToDetail = { hexagramId ->
@@ -110,7 +116,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onStartManualDivination = {
                                 pendingDivinationTab = 0
-                                currentTab = 1
+                                currentTab = 5
                             },
                             onAutoOpenConsumed = { pendingDetailId = null },
                             onRequestedTabConsumed = { pendingDivinationTab = null },
@@ -129,6 +135,7 @@ private fun MainScreenContent(
     currentTab: Int,
     viewModel: DivinationViewModel,
     settingsViewModel: SettingsViewModel,
+    readerViewModel: ReaderViewModel,
     pendingDetailId: Int?,
     pendingDivinationTab: Int?,
     onNavigateToDetail: (Int) -> Unit,
@@ -138,24 +145,30 @@ private fun MainScreenContent(
     modifier: Modifier = Modifier
 ) {
     Surface(modifier = modifier.fillMaxSize()) {
-        when (currentTab) {
-            0 -> HomeScreen(
-                viewModel = viewModel,
-                onStartManualDivination = onStartManualDivination
-            )
-            1 -> DivinationInputScreen(
-                viewModel = viewModel,
-                onNavigateToDetail = onNavigateToDetail,
-                requestedTabIndex = pendingDivinationTab,
-                onRequestedTabConsumed = onRequestedTabConsumed
-            )
-            2 -> HexagramQueryScreen(
-                viewModel = viewModel,
-                autoOpenId = pendingDetailId,
-                onAutoOpenConsumed = onAutoOpenConsumed
-            )
-            3 -> HistoryScreen(viewModel = viewModel)
-            4 -> SettingsScreen(settingsViewModel = settingsViewModel)
+        ZenPageTransition(currentPage = currentTab) { page ->
+            when (page) {
+                0 -> HomeScreen(
+                    viewModel = viewModel,
+                    onStartManualDivination = onStartManualDivination
+                )
+                1 -> ReaderScreen(viewModel = readerViewModel)
+                2 -> HexagramQueryScreen(
+                    viewModel = viewModel,
+                    autoOpenId = pendingDetailId,
+                    onAutoOpenConsumed = onAutoOpenConsumed
+                )
+                3 -> HistoryScreen(viewModel = viewModel)
+                4 -> SettingsScreen(
+                    settingsViewModel = settingsViewModel,
+                    readerViewModel = readerViewModel
+                )
+                5 -> DivinationInputScreen(
+                    viewModel = viewModel,
+                    onNavigateToDetail = onNavigateToDetail,
+                    requestedTabIndex = pendingDivinationTab,
+                    onRequestedTabConsumed = onRequestedTabConsumed
+                )
+            }
         }
     }
 }
@@ -171,8 +184,8 @@ private fun RowScope.NavigationBarItems(currentTab: Int, onSelect: (Int) -> Unit
     NavigationBarItem(
         selected = currentTab == 1,
         onClick = { onSelect(1) },
-        icon = { Icon(Icons.Default.Star, contentDescription = "起卦") },
-        label = { Text("起卦") }
+        icon = { Icon(BookIcon, contentDescription = "書籍") },
+        label = { Text("書籍") }
     )
     NavigationBarItem(
         selected = currentTab == 2,
@@ -205,8 +218,8 @@ private fun NavigationRailItems(currentTab: Int, onSelect: (Int) -> Unit) {
     NavigationRailItem(
         selected = currentTab == 1,
         onClick = { onSelect(1) },
-        icon = { Icon(Icons.Default.Star, contentDescription = "起卦") },
-        label = { Text("起卦") }
+        icon = { Icon(BookIcon, contentDescription = "書籍") },
+        label = { Text("書籍") }
     )
     NavigationRailItem(
         selected = currentTab == 2,

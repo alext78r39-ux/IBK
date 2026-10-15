@@ -1,14 +1,12 @@
 package com.masteryi.yibokgua.ui.screen.home
 
 import android.content.pm.PackageManager
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -28,11 +26,19 @@ import com.masteryi.yibokgua.settings.ColorPreset
 import com.masteryi.yibokgua.settings.SettingsViewModel
 import com.masteryi.yibokgua.settings.ThemeMode
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import com.masteryi.yibokgua.ui.components.ZenCard
+import com.masteryi.yibokgua.ui.components.zenThinBorder
+import com.masteryi.yibokgua.ui.screen.reader.ReaderSettings
+import com.masteryi.yibokgua.ui.screen.reader.ReaderViewModel
 import kotlin.math.roundToInt
 
 @Composable
-fun SettingsScreen(settingsViewModel: SettingsViewModel) {
+fun SettingsScreen(
+    settingsViewModel: SettingsViewModel,
+    readerViewModel: ReaderViewModel
+) {
     val settings by settingsViewModel.settings.collectAsState()
+    val readerSettings by readerViewModel.settings.collectAsState()
     var showUsage by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showLegal by rememberSaveable { mutableStateOf(false) }
@@ -131,6 +137,41 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel) {
             }
         }
 
+        SectionLabel("閱讀")
+        SettingCard {
+            Column(Modifier.padding(vertical = 6.dp)) {
+                SliderSettingRow(
+                    title = "閱讀字級",
+                    subtitle = "調整書籍內文字大小",
+                    value = readerSettings.fontSizeSp,
+                    valueRange = ReaderSettings.MIN_FONT_SIZE_SP..ReaderSettings.MAX_FONT_SIZE_SP,
+                    steps = 23,
+                    valueLabel = { "${it.roundToInt()}sp" },
+                    onValueChange = readerViewModel::setFontSizeSp
+                )
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                SliderSettingRow(
+                    title = "閱讀行距",
+                    subtitle = "調整行與行之間的距離",
+                    value = readerSettings.lineHeightMultiplier,
+                    valueRange = ReaderSettings.MIN_LINE_HEIGHT..ReaderSettings.MAX_LINE_HEIGHT,
+                    steps = 11,
+                    valueLabel = { String.format("%.1f", it) },
+                    onValueChange = readerViewModel::setLineHeightMultiplier
+                )
+                HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                SliderSettingRow(
+                    title = "段落間距",
+                    subtitle = "調整段落之間的距離",
+                    value = readerSettings.paragraphSpacingDp,
+                    valueRange = 0f..32f,
+                    steps = 15,
+                    valueLabel = { "${it.roundToInt()}dp" },
+                    onValueChange = readerViewModel::setParagraphSpacingDp
+                )
+            }
+        }
+
         SectionLabel("資料")
         SettingCard {
             SettingRow(
@@ -210,11 +251,7 @@ private fun SectionLabel(text: String) {
 
 @Composable
 private fun SettingCard(content: @Composable ColumnScope.() -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    ZenCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
             content = content
@@ -389,9 +426,9 @@ private fun ScrollableInfoDialog(
                 .widthIn(max = 560.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(0.9f),
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+            border = zenThinBorder()
         ) {
             Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
                 Text(
@@ -493,8 +530,11 @@ private val USAGE_TEXT = """
 【歷史】
 查看本次應用內搖卦的卦象紀錄。
 
+【書籍】
+內建純文字閱讀器，點「匯入」選擇 .txt 檔案即可閱讀。閱讀時點擊畫面中央可顯示或隱藏工具列，並可即時調整字級與行距。
+
 【設定】
-可切換主題模式（跟隨系統／淺色／深色）、動態取色，並可重置所有設定。
+可切換主題模式（跟隨系統／淺色／深色）、動態取色，並可調整閱讀字級、行距與段落間距，亦可重置所有設定。
 
 【貼士】
 心誠則靈，一事一卦。同一件事短期內不宜重複占問。

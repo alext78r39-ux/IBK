@@ -1,7 +1,5 @@
 package com.masteryi.yibokgua.ui.components
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,10 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,11 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.masteryi.core.model.iching.TrigramInfo
-import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
-
-/** 全局統一細框線樣式（隨主題與設定自適應） */
-private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(LocalBorderWidth.current.dp, MaterialTheme.colorScheme.outline)
 
 /**
  * 八卦資料詳情彈窗：卦象、先天數五行、萬類象全覽。
@@ -51,9 +41,9 @@ fun TrigramInfoDialog(
             modifier = Modifier
                 .width(380.dp)
                 .fillMaxHeight(0.8f),
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surface,
-            border = ThinBorder
+            border = zenThinBorder()
         ) {
             Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                 Column(
@@ -83,10 +73,8 @@ fun TrigramInfoDialog(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        border = ThinBorder,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    ZenCard(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
@@ -181,13 +169,10 @@ fun CompactTrigramCard(
     val visibleEntries = if (maxEntries >= 0) entries.take(maxEntries) else entries
     val hiddenCount = entries.size - visibleEntries.size
 
-    Card(
-        modifier = modifier.then(
-            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
-        ),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ZenCard(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
             Text(

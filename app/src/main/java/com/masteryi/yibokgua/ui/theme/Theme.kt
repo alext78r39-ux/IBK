@@ -2,150 +2,186 @@ package com.masteryi.yibokgua.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.masteryi.yibokgua.settings.ColorPreset
 import com.masteryi.yibokgua.settings.ThemeMode
 
-// ==================== 朱砂金（預設） ====================
-private val LightColorScheme = lightColorScheme(
-    primary = YiRedLight, onPrimary = Color.White,
-    primaryContainer = YiRedContainer, onPrimaryContainer = OnYiRedContainer,
-    secondary = YiGoldLight, onSecondary = Color.White,
-    secondaryContainer = YiGoldContainer, onSecondaryContainer = OnYiGoldContainer,
-    tertiary = YiGoldLight,
-    background = YiPaper, onBackground = YiOnPaper,
-    surface = YiPaper, onSurface = YiOnPaper,
-    surfaceVariant = YiSurfaceVariantLight, onSurfaceVariant = YiOnSurfaceVariantLight,
-    outline = YiOutlineLight,
-    error = Color(0xFFB3261E), onError = Color.White
+/**
+ * 圓角 Tokens：全面加大圓角，卡片與對話窗一律取 [Shapes.extraLarge] = 24dp，
+ * 讓版面呈現柔和、留白的禪意感。
+ */
+val YibokguaShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(24.dp)
 )
 
-private val DarkColorScheme = darkColorScheme(
+/**
+ * 建立低對比淺色配色。
+ * 各主題只傳入「帶色」角色，宣紙／墨色／框線等中性色由這裡統一壓低對比，
+ * 確保五套主題的沉靜基調一致。
+ */
+private fun zenLightScheme(
+    primary: Color,
+    onPrimary: Color,
+    primaryContainer: Color,
+    onPrimaryContainer: Color,
+    secondary: Color,
+    onSecondary: Color,
+    secondaryContainer: Color,
+    onSecondaryContainer: Color
+) = lightColorScheme(
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primaryContainer,
+    onPrimaryContainer = onPrimaryContainer,
+    secondary = secondary,
+    onSecondary = onSecondary,
+    secondaryContainer = secondaryContainer,
+    onSecondaryContainer = onSecondaryContainer,
+    tertiary = secondary,
+    onTertiary = onSecondary,
+    tertiaryContainer = secondaryContainer,
+    onTertiaryContainer = onSecondaryContainer,
+    background = YiPaper,
+    onBackground = YiOnPaper,
+    surface = YiPaper,
+    onSurface = YiOnPaper,
+    surfaceVariant = YiSurfaceVariantLight,
+    onSurfaceVariant = YiOnSurfaceVariantLight,
+    outline = YiOutlineLight,
+    outlineVariant = YiOutlineVariantLight,
+    scrim = ZenScrim,
+    error = ZenErrorLight,
+    onError = OnZenErrorLight,
+    errorContainer = ZenErrorContainerLight,
+    onErrorContainer = OnZenErrorContainerLight
+)
+
+/** 建立低對比暗色配色，語意與 [zenLightScheme] 相同 */
+private fun zenDarkScheme(
+    primary: Color,
+    onPrimary: Color,
+    primaryContainer: Color,
+    onPrimaryContainer: Color,
+    secondary: Color,
+    onSecondary: Color,
+    secondaryContainer: Color,
+    onSecondaryContainer: Color
+) = darkColorScheme(
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primaryContainer,
+    onPrimaryContainer = onPrimaryContainer,
+    secondary = secondary,
+    onSecondary = onSecondary,
+    secondaryContainer = secondaryContainer,
+    onSecondaryContainer = onSecondaryContainer,
+    tertiary = secondary,
+    onTertiary = onSecondary,
+    tertiaryContainer = secondaryContainer,
+    onTertiaryContainer = onSecondaryContainer,
+    background = YiPaperDark,
+    onBackground = YiOnPaperDark,
+    surface = YiPaperDark,
+    onSurface = YiOnPaperDark,
+    surfaceVariant = YiSurfaceVariantDark,
+    onSurfaceVariant = YiOnSurfaceVariantDark,
+    outline = YiOutlineDark,
+    outlineVariant = YiOutlineVariantDark,
+    scrim = ZenScrim,
+    error = ZenErrorDark,
+    onError = OnZenErrorDark,
+    errorContainer = ZenErrorContainerDark,
+    onErrorContainer = OnZenErrorContainerDark
+)
+
+// ==================== 朱砂金（預設） ====================
+private val LightColorScheme = zenLightScheme(
+    primary = YiRedLight, onPrimary = ZenOnAccentLight,
+    primaryContainer = YiRedContainer, onPrimaryContainer = OnYiRedContainer,
+    secondary = YiGoldLight, onSecondary = ZenOnAccentLight,
+    secondaryContainer = YiGoldContainer, onSecondaryContainer = OnYiGoldContainer
+)
+
+private val DarkColorScheme = zenDarkScheme(
     primary = YiRedDark, onPrimary = OnYiRedDark,
     primaryContainer = YiDarkRedContainer, onPrimaryContainer = YiRedContainer,
     secondary = YiGoldDark, onSecondary = OnYiGoldDark,
-    secondaryContainer = YiGoldContainerDark, onSecondaryContainer = YiGoldContainer,
-    tertiary = YiGoldDark,
-    background = YiPaperDark, onBackground = Color(0xFFF0EDE6),
-    surface = YiPaperDark, onSurface = Color(0xFFF0EDE6),
-    surfaceVariant = YiSurfaceVariantDark, onSurfaceVariant = YiOnSurfaceVariantDark,
-    outline = YiOutlineDark,
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005)
+    secondaryContainer = YiGoldContainerDark, onSecondaryContainer = YiGoldContainer
 )
 
 // ==================== 青瓷藍 ====================
-private val BlueLightScheme = lightColorScheme(
-    primary = BluePrimaryLight, onPrimary = Color.White,
+private val BlueLightScheme = zenLightScheme(
+    primary = BluePrimaryLight, onPrimary = ZenOnAccentLight,
     primaryContainer = BluePrimaryContainerLight, onPrimaryContainer = OnBluePrimaryContainerLight,
-    secondary = BlueSecondaryLight, onSecondary = Color.White,
-    secondaryContainer = BlueSecondaryContainerLight, onSecondaryContainer = OnBlueSecondaryContainerLight,
-    tertiary = BlueSecondaryLight,
-    background = YiPaper, onBackground = YiOnPaper,
-    surface = YiPaper, onSurface = YiOnPaper,
-    surfaceVariant = YiSurfaceVariantLight, onSurfaceVariant = YiOnSurfaceVariantLight,
-    outline = YiOutlineLight,
-    error = Color(0xFFB3261E), onError = Color.White
+    secondary = BlueSecondaryLight, onSecondary = ZenOnAccentLight,
+    secondaryContainer = BlueSecondaryContainerLight, onSecondaryContainer = OnBlueSecondaryContainerLight
 )
 
-private val BlueDarkScheme = darkColorScheme(
+private val BlueDarkScheme = zenDarkScheme(
     primary = BluePrimaryDark, onPrimary = OnBluePrimaryDark,
     primaryContainer = BlueDarkPrimaryContainerLight, onPrimaryContainer = BluePrimaryContainerLight,
     secondary = BlueSecondaryDark, onSecondary = OnBlueSecondaryDark,
-    secondaryContainer = BlueSecondaryContainerDark, onSecondaryContainer = BlueSecondaryContainerLight,
-    tertiary = BlueSecondaryDark,
-    background = YiPaperDark, onBackground = Color(0xFFF0EDE6),
-    surface = YiPaperDark, onSurface = Color(0xFFF0EDE6),
-    surfaceVariant = YiSurfaceVariantDark, onSurfaceVariant = YiOnSurfaceVariantDark,
-    outline = YiOutlineDark,
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005)
+    secondaryContainer = BlueSecondaryContainerDark, onSecondaryContainer = BlueSecondaryContainerLight
 )
 
 // ==================== 翡翠綠 ====================
-private val GreenLightScheme = lightColorScheme(
-    primary = GreenPrimaryLight, onPrimary = Color.White,
+private val GreenLightScheme = zenLightScheme(
+    primary = GreenPrimaryLight, onPrimary = ZenOnAccentLight,
     primaryContainer = GreenPrimaryContainerLight, onPrimaryContainer = OnGreenPrimaryContainerLight,
-    secondary = GreenSecondaryLight, onSecondary = Color.White,
-    secondaryContainer = GreenSecondaryContainerLight, onSecondaryContainer = OnGreenSecondaryContainerLight,
-    tertiary = GreenSecondaryLight,
-    background = YiPaper, onBackground = YiOnPaper,
-    surface = YiPaper, onSurface = YiOnPaper,
-    surfaceVariant = YiSurfaceVariantLight, onSurfaceVariant = YiOnSurfaceVariantLight,
-    outline = YiOutlineLight,
-    error = Color(0xFFB3261E), onError = Color.White
+    secondary = GreenSecondaryLight, onSecondary = ZenOnAccentLight,
+    secondaryContainer = GreenSecondaryContainerLight, onSecondaryContainer = OnGreenSecondaryContainerLight
 )
 
-private val GreenDarkScheme = darkColorScheme(
+private val GreenDarkScheme = zenDarkScheme(
     primary = GreenPrimaryDark, onPrimary = OnGreenPrimaryDark,
     primaryContainer = GreenDarkPrimaryContainerLight, onPrimaryContainer = GreenPrimaryContainerLight,
     secondary = GreenSecondaryDark, onSecondary = OnGreenSecondaryDark,
-    secondaryContainer = GreenSecondaryContainerDark, onSecondaryContainer = GreenSecondaryContainerLight,
-    tertiary = GreenSecondaryDark,
-    background = YiPaperDark, onBackground = Color(0xFFF0EDE6),
-    surface = YiPaperDark, onSurface = Color(0xFFF0EDE6),
-    surfaceVariant = YiSurfaceVariantDark, onSurfaceVariant = YiOnSurfaceVariantDark,
-    outline = YiOutlineDark,
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005)
+    secondaryContainer = GreenSecondaryContainerDark, onSecondaryContainer = GreenSecondaryContainerLight
 )
 
 // ==================== 紫水晶 ====================
-private val PurpleLightScheme = lightColorScheme(
-    primary = PurplePrimaryLight, onPrimary = Color.White,
+private val PurpleLightScheme = zenLightScheme(
+    primary = PurplePrimaryLight, onPrimary = ZenOnAccentLight,
     primaryContainer = PurplePrimaryContainerLight, onPrimaryContainer = OnPurplePrimaryContainerLight,
-    secondary = PurpleSecondaryLight, onSecondary = Color.White,
-    secondaryContainer = PurpleSecondaryContainerLight, onSecondaryContainer = OnPurpleSecondaryContainerLight,
-    tertiary = PurpleSecondaryLight,
-    background = YiPaper, onBackground = YiOnPaper,
-    surface = YiPaper, onSurface = YiOnPaper,
-    surfaceVariant = YiSurfaceVariantLight, onSurfaceVariant = YiOnSurfaceVariantLight,
-    outline = YiOutlineLight,
-    error = Color(0xFFB3261E), onError = Color.White
+    secondary = PurpleSecondaryLight, onSecondary = ZenOnAccentLight,
+    secondaryContainer = PurpleSecondaryContainerLight, onSecondaryContainer = OnPurpleSecondaryContainerLight
 )
 
-private val PurpleDarkScheme = darkColorScheme(
+private val PurpleDarkScheme = zenDarkScheme(
     primary = PurplePrimaryDark, onPrimary = OnPurplePrimaryDark,
     primaryContainer = PurpleDarkPrimaryContainerLight, onPrimaryContainer = PurplePrimaryContainerLight,
     secondary = PurpleSecondaryDark, onSecondary = OnPurpleSecondaryDark,
-    secondaryContainer = PurpleSecondaryContainerDark, onSecondaryContainer = PurpleSecondaryContainerLight,
-    tertiary = PurpleSecondaryDark,
-    background = YiPaperDark, onBackground = Color(0xFFF0EDE6),
-    surface = YiPaperDark, onSurface = Color(0xFFF0EDE6),
-    surfaceVariant = YiSurfaceVariantDark, onSurfaceVariant = YiOnSurfaceVariantDark,
-    outline = YiOutlineDark,
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005)
+    secondaryContainer = PurpleSecondaryContainerDark, onSecondaryContainer = PurpleSecondaryContainerLight
 )
 
 // ==================== 琥珀橘 ====================
-private val OrangeLightScheme = lightColorScheme(
-    primary = OrangePrimaryLight, onPrimary = Color.White,
+private val OrangeLightScheme = zenLightScheme(
+    primary = OrangePrimaryLight, onPrimary = ZenOnAccentLight,
     primaryContainer = OrangePrimaryContainerLight, onPrimaryContainer = OnOrangePrimaryContainerLight,
-    secondary = OrangeSecondaryLight, onSecondary = Color.White,
-    secondaryContainer = OrangeSecondaryContainerLight, onSecondaryContainer = OnOrangeSecondaryContainerLight,
-    tertiary = OrangeSecondaryLight,
-    background = YiPaper, onBackground = YiOnPaper,
-    surface = YiPaper, onSurface = YiOnPaper,
-    surfaceVariant = YiSurfaceVariantLight, onSurfaceVariant = YiOnSurfaceVariantLight,
-    outline = YiOutlineLight,
-    error = Color(0xFFB3261E), onError = Color.White
+    secondary = OrangeSecondaryLight, onSecondary = ZenOnAccentLight,
+    secondaryContainer = OrangeSecondaryContainerLight, onSecondaryContainer = OnOrangeSecondaryContainerLight
 )
 
-private val OrangeDarkScheme = darkColorScheme(
+private val OrangeDarkScheme = zenDarkScheme(
     primary = OrangePrimaryDark, onPrimary = OnOrangePrimaryDark,
     primaryContainer = OrangeDarkPrimaryContainerLight, onPrimaryContainer = OrangePrimaryContainerLight,
     secondary = OrangeSecondaryDark, onSecondary = OnOrangeSecondaryDark,
-    secondaryContainer = OrangeSecondaryContainerDark, onSecondaryContainer = OrangeSecondaryContainerLight,
-    tertiary = OrangeSecondaryDark,
-    background = YiPaperDark, onBackground = Color(0xFFF0EDE6),
-    surface = YiPaperDark, onSurface = Color(0xFFF0EDE6),
-    surfaceVariant = YiSurfaceVariantDark, onSurfaceVariant = YiOnSurfaceVariantDark,
-    outline = YiOutlineDark,
-    error = Color(0xFFFFB4AB), onError = Color(0xFF690005)
+    secondaryContainer = OrangeSecondaryContainerDark, onSecondaryContainer = OrangeSecondaryContainerLight
 )
 
 private fun colorSchemeFor(preset: ColorPreset, dark: Boolean): androidx.compose.material3.ColorScheme = when (preset) {
@@ -177,11 +213,14 @@ fun YibokguaTheme(
         else -> colorSchemeFor(colorPreset, darkTheme)
     }
     val scaledTypography = scaledTypography(fontSizeScale)
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = scaledTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalMotion provides ZenMotion()) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = scaledTypography,
+            shapes = YibokguaShapes,
+            content = content
+        )
+    }
 }
 
 /** 依倍率縮放所有字級 */

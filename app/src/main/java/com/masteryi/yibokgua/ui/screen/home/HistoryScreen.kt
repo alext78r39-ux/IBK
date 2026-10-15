@@ -16,13 +16,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
+import com.masteryi.yibokgua.ui.components.ZenCard
+import com.masteryi.yibokgua.ui.components.zenThinBorder
 import com.masteryi.yibokgua.ui.export.shareDetailCardAsImage
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
+    @Composable get() = zenThinBorder()
 
 @Composable
 fun HistoryScreen(
@@ -49,11 +51,7 @@ fun HistoryScreen(
                     SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault())
                         .format(Date(result.timestamp))
                 }
-                Card(
-                    border = ThinBorder,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                ZenCard(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(14.dp).fillMaxWidth()) {
                         Row(
                             modifier = Modifier

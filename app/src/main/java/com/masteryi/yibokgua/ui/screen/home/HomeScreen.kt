@@ -1,13 +1,12 @@
 package com.masteryi.yibokgua.ui.screen.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -32,10 +31,9 @@ import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
 import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
+import com.masteryi.yibokgua.ui.components.ZenCard
+import com.masteryi.yibokgua.ui.components.zenPressScale
 import java.time.LocalDate
-
-private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline)
 
 /** 全屏自適應參數：依可用高度決定是否進入緊湊模式 */
 private data class HomeSpace(
@@ -86,9 +84,6 @@ fun HomeScreen(
                 HomeHeader(lunarLabel = lunarToday.text, space = space)
 
                 Spacer(Modifier.height(space.sectionSpacing))
-                DivinationQuote(space = space)
-
-                Spacer(Modifier.height(space.sectionSpacing))
 
                 // 所占之事輸入框：輸入後按「確定」跳轉手動起卦
                 QuestionInputBar(
@@ -112,6 +107,10 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .weight(1f)
                 )
+
+                Spacer(Modifier.height(space.sectionSpacing))
+                DivinationQuote(space = space)
+
                 Spacer(Modifier.height(4.dp))
             }
         }
@@ -136,11 +135,8 @@ private fun QuestionInputBar(
         if (uiState.question.isNotEmpty()) questionInput = uiState.question
     }
 
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ZenCard(
+        modifier = modifier
     ) {
         Row(
             modifier = Modifier
@@ -152,7 +148,7 @@ private fun QuestionInputBar(
             OutlinedTextField(
                 value = questionInput,
                 onValueChange = { questionInput = it },
-                placeholder = { Text("輸入所占之事") },
+                placeholder = { Text("輸入所占之事，一事一占、心誠則靈。") },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
@@ -211,12 +207,7 @@ private fun HomeHeader(lunarLabel: String, space: HomeSpace) {
 
 @Composable
 private fun DivinationQuote(space: HomeSpace) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+    ZenCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -224,17 +215,17 @@ private fun DivinationQuote(space: HomeSpace) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("「", fontSize = (if (space.compact) 16 else 20).sp, fontFamily = FontFamily.Serif,
+            Text("「", fontSize = (if (space.compact) 20 else 24).sp, fontFamily = FontFamily.Serif,
                 color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
             Text(
                 "禍福莫逃乎數，吉凶皆有其機。",
                 fontFamily = FontFamily.Serif,
-                fontSize = (if (space.compact) 14 else 17).sp,
+                fontSize = (if (space.compact) 18 else 22).sp,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 3.dp)
             )
-            Text("」", fontSize = (if (space.compact) 16 else 20).sp, fontFamily = FontFamily.Serif,
+            Text("」", fontSize = (if (space.compact) 20 else 24).sp, fontFamily = FontFamily.Serif,
                 color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
         }
     }
@@ -247,15 +238,21 @@ private fun TaijiAction(space: HomeSpace, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        val press = remember { MutableInteractionSource() }
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(space.taijiSize)
+                .zenPressScale(press)
                 .shadow(3.dp, CircleShape)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface)
                 .border(2.dp, MaterialTheme.colorScheme.secondary, CircleShape)
-                .clickable(onClick = onClick)
+                .clickable(
+                    interactionSource = press,
+                    indication = ripple(),
+                    onClick = onClick
+                )
         ) {
             TaijiArtwork(Modifier.fillMaxSize(0.78f))
         }
@@ -357,13 +354,13 @@ private fun BaguaCard(
 ) {
     val container = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
     val content = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-    Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
-        border = if (selected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 2.dp else 0.dp)
+    ZenCard(
+        modifier = modifier,
+        containerColor = container,
+        contentColor = content,
+        shape = MaterialTheme.shapes.small,
+        border = null,
+        onClick = onClick
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

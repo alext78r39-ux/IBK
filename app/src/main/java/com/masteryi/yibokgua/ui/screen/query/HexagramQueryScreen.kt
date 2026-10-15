@@ -1,14 +1,12 @@
 package com.masteryi.yibokgua.ui.screen.query
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,13 +25,14 @@ import com.masteryi.core.model.iching.TrigramInfo
 import com.masteryi.yibokgua.ui.components.AdaptiveScreen
 import com.masteryi.yibokgua.ui.components.TrigramInfoDialog
 import com.masteryi.yibokgua.ui.components.TrigramPairSection
-import com.masteryi.yibokgua.ui.theme.LocalBorderWidth
+import com.masteryi.yibokgua.ui.components.ZenCard
+import com.masteryi.yibokgua.ui.components.zenThinBorder
 import com.masteryi.yibokgua.ui.theme.YibokguaTheme
 import com.masteryi.yibokgua.viewmodel.DivinationViewModel
 
 /** 全局統一細框線樣式（隨主題與設定自適應） */
 private val ThinBorder: BorderStroke
-    @Composable get() = BorderStroke(LocalBorderWidth.current.dp, MaterialTheme.colorScheme.outline)
+    @Composable get() = zenThinBorder()
 
 @Composable
 fun HexagramQueryScreen(
@@ -75,12 +74,9 @@ fun HexagramQueryScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(filteredList) { hexagram ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { selectedHexagram = hexagram },
-                    border = ThinBorder,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ZenCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { selectedHexagram = hexagram }
                 ) {
                     Row(
                         modifier = Modifier
@@ -158,7 +154,7 @@ fun HexagramDetailDialog(
                 .widthIn(max = 720.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(0.92f),
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surface,
             border = ThinBorder
         ) {
@@ -320,13 +316,9 @@ private fun RelatedHexagramCard(
     hexagram: Hexagram,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .width(100.dp)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        border = ThinBorder,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ZenCard(
+        modifier = Modifier.width(100.dp),
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
